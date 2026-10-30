@@ -1,0 +1,268 @@
+{
+  "checked_utc": "2026-10-30T01:19:08.788735+00:00",
+  "ffmpeg_version": "ffmpeg version 7.1-essentials_build-www.gyan.dev Copyright (c) 2000-2024 the FFmpeg developers",
+  "fixture": {
+    "file": "three-frames.mp4",
+    "sha256": "a3251c971ddcee458e8f31d20d6f7eb6677222d1b0283cedbbee9936b7f6d279",
+    "duration_seconds": 3.0,
+    "presentation_timestamps_seconds": [
+      0.0,
+      1.0,
+      2.0
+    ],
+    "frame_colors_in_order": [
+      "red",
+      "green",
+      "blue"
+    ],
+    "original_synthetic_media": true
+  },
+  "longer_audio_fixture": {
+    "file": "longer-audio.mp4",
+    "sha256": "b4e90fd6e7a00165bdd77b8b3d52bbb8bdd0a17bec1d278df5a73924a5dae89a",
+    "duration_seconds": 5.0,
+    "presentation_timestamps_seconds": [
+      0.0,
+      1.0,
+      2.0
+    ]
+  },
+  "last_frame": {
+    "file": "last.png",
+    "dimensions": [
+      320,
+      180
+    ],
+    "center_rgb": [
+      0,
+      0,
+      254
+    ],
+    "bytes": 691,
+    "sha256": "869b02809bc20f0ab8af27d6f9c470bc5a15046aad2ad257e81ac46b47ebf790"
+  },
+  "index_one_frame": {
+    "file": "index-one.png",
+    "dimensions": [
+      320,
+      180
+    ],
+    "center_rgb": [
+      0,
+      255,
+      0
+    ],
+    "bytes": 692,
+    "sha256": "c51c704082ebbf286fdbba5cf43dbac0854d8e9d4083e20c7f959be1155d1f26"
+  },
+  "checks": {
+    "three_presentation_timestamps": true,
+    "duration_three_seconds": true,
+    "last_is_blue": true,
+    "index_one_is_green": true,
+    "seek_at_end_created_no_png": true,
+    "png_dimensions_match": true,
+    "longer_audio_duration_five_seconds": true,
+    "longer_audio_same_video_timestamps": true
+  },
+  "commands": [
+    {
+      "name": "encode",
+      "argv": [
+        "ffmpeg",
+        "-hide_banner",
+        "-nostdin",
+        "-y",
+        "-framerate",
+        "1",
+        "-i",
+        "source-%02d.ppm",
+        "-c:v",
+        "libx264",
+        "-pix_fmt",
+        "yuv420p",
+        "-crf",
+        "18",
+        "-movflags",
+        "+faststart",
+        "three-frames.mp4"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "timestamps",
+      "argv": [
+        "ffmpeg",
+        "-hide_banner",
+        "-nostdin",
+        "-y",
+        "-i",
+        "three-frames.mp4",
+        "-map",
+        "0:v:0",
+        "-an",
+        "-vf",
+        "showinfo",
+        "-f",
+        "null",
+        "-"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "add-longer-audio",
+      "argv": [
+        "ffmpeg",
+        "-hide_banner",
+        "-nostdin",
+        "-y",
+        "-i",
+        "three-frames.mp4",
+        "-f",
+        "lavfi",
+        "-i",
+        "anullsrc=r=48000:cl=mono",
+        "-map",
+        "0:v:0",
+        "-map",
+        "1:a:0",
+        "-c:v",
+        "copy",
+        "-c:a",
+        "aac",
+        "-t",
+        "5",
+        "longer-audio.mp4"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "longer-audio-timestamps",
+      "argv": [
+        "ffmpeg",
+        "-hide_banner",
+        "-nostdin",
+        "-y",
+        "-i",
+        "longer-audio.mp4",
+        "-map",
+        "0:v:0",
+        "-an",
+        "-vf",
+        "showinfo",
+        "-f",
+        "null",
+        "-"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "extract-last",
+      "argv": [
+        "ffmpeg",
+        "-hide_banner",
+        "-nostdin",
+        "-y",
+        "-i",
+        "three-frames.mp4",
+        "-map",
+        "0:v:0",
+        "-an",
+        "-fps_mode",
+        "passthrough",
+        "-update",
+        "1",
+        "last.png"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "extract-index-one",
+      "argv": [
+        "ffmpeg",
+        "-hide_banner",
+        "-nostdin",
+        "-y",
+        "-i",
+        "three-frames.mp4",
+        "-map",
+        "0:v:0",
+        "-an",
+        "-vf",
+        "select=eq(n\\,1)",
+        "-frames:v",
+        "1",
+        "-fps_mode",
+        "passthrough",
+        "-update",
+        "1",
+        "index-one.png"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "seek-at-duration",
+      "argv": [
+        "ffmpeg",
+        "-hide_banner",
+        "-nostdin",
+        "-y",
+        "-ss",
+        "3",
+        "-i",
+        "three-frames.mp4",
+        "-map",
+        "0:v:0",
+        "-an",
+        "-frames:v",
+        "1",
+        "-update",
+        "1",
+        "at-duration.png"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "decode-last.png",
+      "argv": [
+        "ffmpeg",
+        "-hide_banner",
+        "-nostdin",
+        "-y",
+        "-i",
+        "last.png",
+        "-f",
+        "rawvideo",
+        "-pix_fmt",
+        "rgb24",
+        "pipe:1"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "decode-index-one.png",
+      "argv": [
+        "ffmpeg",
+        "-hide_banner",
+        "-nostdin",
+        "-y",
+        "-i",
+        "index-one.png",
+        "-f",
+        "rawvideo",
+        "-pix_fmt",
+        "rgb24",
+        "pipe:1"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "not_covered": [
+    "variable-frame-rate media",
+    "HDR/color-managed workflows",
+    "rotation metadata",
+    "other codecs/builds",
+    "corrupt input",
+    "network services"
+  ]
+}

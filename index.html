@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="A reproducible three-frame video lab: inspect timestamps, extract a final PNG, and see why container duration can give the wrong answer.">
+<title>Video frame timing lab — extract the picture you mean</title>
+<style>
+:root{font:18px/1.6 system-ui,sans-serif;color:#17252b;background:#fcfcfa}body{margin:0}main{max-width:850px;margin:auto;padding:2rem 1.25rem 4rem}h1{font-size:clamp(2rem,6vw,3.2rem);line-height:1.12;max-width:20ch}h2{margin-top:2.5rem;line-height:1.25}h3{margin-bottom:.5rem}a{color:#005c80;text-underline-offset:.2em}a:focus-visible{outline:3px solid #aa6500;outline-offset:3px}.intro{font-size:1.2rem;max-width:65ch}.eyebrow{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:#4a5a60}code,pre{font-family:ui-monospace,monospace}code{font-size:.9em}pre{background:#edf1f1;padding:1rem;overflow:auto;border-left:4px solid #236b7b}table{border-collapse:collapse;width:100%;font-size:.92rem}th,td{text-align:left;vertical-align:top;padding:.8rem .65rem;border-bottom:1px solid #cbd4d5}th{background:#edf1f1}.scroll{overflow:auto}video{width:100%;max-width:640px;background:#152126;aspect-ratio:16/9}figure{margin:1.5rem 0}figcaption,.note{font-size:.9rem;color:#40565e}.frames{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem}.frame{padding:1rem;border:1px solid #b6c4c7;background:white}.swatch{display:block;height:2.5rem;margin-bottom:.6rem}.red{background:#d91515}.green{background:#158522}.blue{background:#143fd3}.download{display:inline-block;padding:.55rem .8rem;border:1px solid #236b7b;border-radius:.25rem;margin:.25rem .25rem .25rem 0}.evidence{border:1px solid #b6c4c7;padding:1rem 1.2rem;background:#f4f7f6}footer{margin-top:3rem;border-top:1px solid #cbd4d5;padding-top:1rem;font-size:.85rem}img{max-width:100%;height:auto}@media(max-width:520px){.frames{grid-template-columns:1fr}.frame{padding:.6rem}.swatch{height:1rem}th,td{min-width:11rem}pre{font-size:.8rem}}
+</style>
+<main>
+<p class="eyebrow">Small, reproducible media lab · checked 30 October 2026</p>
+<h1>Extract the picture you mean.</h1>
+<p class="intro">A three-second clip can have its last frame at two seconds. Try the fixture, inspect the timestamps, and save the final decoded picture.</p>
+<p><a href="#commands">Use the commands</a> · <a href="#tools">Choose a free tool</a> · <a href="README.md">Full guide</a></p>
+<h2>Three frames. Three seconds. No frame at the endpoint.</h2>
+<figure><video controls preload="metadata" aria-label="Original three-frame fixture: red at zero seconds, green at one second, blue at two seconds"><source src="fixtures/three-frames.mp4" type="video/mp4"><a href="fixtures/three-frames.mp4">Download the fixture video</a></video><figcaption>Original 320×180 fixture, one frame per second. The blue frame remains visible from two to three seconds.</figcaption></figure>
+<div class="frames" aria-label="Fixture presentation timeline">
+<div class="frame"><span class="swatch red" aria-hidden="true"></span><strong>Frame 0 · red</strong><br>Starts at 0 s<br>Visible until 1 s</div>
+<div class="frame"><span class="swatch green" aria-hidden="true"></span><strong>Frame 1 · green</strong><br>Starts at 1 s<br>Visible until 2 s</div>
+<div class="frame"><span class="swatch blue" aria-hidden="true"></span><strong>Frame 2 · blue</strong><br>Starts at 2 s<br>Visible until 3 s</div>
+</div>
+<p>The end of a frame's visible interval is different from its presentation time. With evenly spaced frames beginning at zero, the last start is <code>(frame count − 1) / fps</code>. Container duration is not always the duration of those same video frames.</p>
+<p><a class="download" href="fixtures/three-frames.mp4" download>Download the 3-second fixture</a><a class="download" href="fixtures/longer-audio.mp4" download>Download the longer-audio fixture</a></p>
+<p>The second file keeps the same three video frames but adds a five-second silent audio track. It reports a five-second duration; its final video frame still starts at two seconds. Subtracting one frame interval from the container duration would give four seconds and miss the actual final frame.</p>
+<h2 id="commands">Use the commands</h2>
+<p>Choose a new output filename to preserve existing images. <code>0:v:0</code> selects the first video stream; check the stream if your file contains several tracks or cover art.</p>
+<h3>Final decoded frame</h3>
+<pre><code>ffmpeg -i "input.mp4" -map 0:v:0 -an -fps_mode passthrough -update 1 "last.png"</code></pre>
+<p>This updates one PNG as the selected video stream decodes. The finished file is the last frame written, without estimating a time near the end. Processing the full clip can be slow. Adding <code>-frames:v 1</code> here would stop at the first output frame.</p>
+<h3>A specific zero-based frame index</h3>
+<pre><code>ffmpeg -i "input.mp4" -map 0:v:0 -an -vf "select=eq(n\,1)" -frames:v 1 -fps_mode passthrough -update 1 "frame-1.png"</code></pre>
+<p>Index 1 is the second frame: green in this fixture.</p>
+<h3>Inspect presentation timestamps</h3>
+<pre><code>ffmpeg -i "input.mp4" -map 0:v:0 -an -vf showinfo -f null -</code></pre>
+<p>Look for <code>pts_time</code>. Our fixture reports 0, 1 and 2. The official <a href="https://ffmpeg.org/ffmpeg.html">command reference</a>, <a href="https://ffmpeg.org/ffmpeg-formats.html#image2-1">image2 options</a> and <a href="https://ffmpeg.org/ffmpeg-filters.html#select_002c-aselect">select filter</a> explain these controls.</p>
+<h2>Check the output, not only the exit code.</h2>
+<div class="evidence"><strong>Eight checks passed with FFmpeg 7.1.</strong><p>Full decoding saved blue. Selecting frame index 1 saved green. Both PNGs were 320×180. Seeking to the three-second endpoint returned exit code 0 but created no PNG. The longer audio changed the reported duration without changing the three video timestamps.</p><p><a href="fixtures/result.json">Read the actual commands, timestamps and file hashes</a>.</p></div>
+<figure><img src="fixtures/last.png" width="320" height="180" alt="The actual exported final frame, solid blue"><figcaption>Actual final PNG from the recorded run. This is generated test media, not customer footage.</figcaption></figure>
+<p>Reproduce the lab with Python 3.10+ and an FFmpeg build with libx264, AAC and PNG support. The Python script needs no extra packages and refuses an existing output directory.</p>
+<pre><code>python frame_timing_lab.py --out lab-output</code></pre>
+<p><a class="download" href="frame_timing_lab.py" download>Download the reproducible lab</a></p>
+<h2 id="tools">Choose a free tool by the job</h2>
+<p>This is a workflow comparison, not a ranking. Limits below were read from official pages on 30 October 2026 and can change.</p>
+<div class="scroll"><table><thead><tr><th scope="col">Tool and job</th><th scope="col">Processing / limits</th><th scope="col">Evidence here</th></tr></thead><tbody>
+<tr><td><a href="https://ffmpeg.org/">FFmpeg</a><br>Repeatable local extraction and scripts</td><td>Local command-line program. Codec support depends on its build.</td><td>The fixture operations above were run with 7.1.</td></tr>
+<tr><td><a href="https://imgmov.com/extract-last-frame-from-video">imgmov Last-Frame Extractor</a><br>Inspect ending frames and select a continuation reference</td><td>Standalone browser-local processing without an account. The page lists MP4/WebM/MOV, 512 MB and two minutes; browser codecs constrain support.</td><td>Official page/limits read. This synthetic lab tests FFmpeg, not the browser service.</td></tr>
+<tr><td><a href="https://ezgif.com/video-to-png">Ezgif Video to PNG</a><br>Image sequences and ZIP downloads</td><td>Uploads the file. Its page lists 200 MB and a one-hour upload deletion policy.</td><td>Official instructions read; no upload test or privacy audit.</td></tr>
+</tbody></table></div>
+<h2>When an earlier frame is the useful one</h2>
+<p>For a continuation, inspect the final picture for fades, blur and distorted geometry. If you choose an earlier reference, end the source clip at that same picture in your editor. Otherwise the cut leaves later frames behind before the next clip restarts from an older one.</p>
+<p>Sharpness cannot establish correctness: inspect faces, hands, labels, edges and motion direction. PNG export cannot restore detail already lost to compression.</p>
+<p class="note">Not covered by this lab: variable frame rate, HDR/tone mapping, rotation metadata, corrupt input or other codec/build combinations. Use actual timestamps and inspect the output for your footage.</p>
+<footer>Prepared by contributors working on imgmov, one of the listed tools. The standalone extraction workflow does not require its AI generation backend. No third-party endorsement is implied. No analytics, external fonts or third-party media are included on this page. <a href="LICENSE">MIT license for newly authored files and synthetic fixtures</a>.</footer>
+</main>
+</html>
