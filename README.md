@@ -83,6 +83,12 @@ The [recorded result](fixtures/result.json) from 30 October 2026 contains eight 
 
 These are fixture results, not a claim that every build, codec or damaged file behaves identically. The script saves command logs so a failed reproduction can be investigated.
 
+## Unequal frame spacing and a black ending
+
+The [VFR endings extension](VFR-ENDINGS.md) adds an original five-frame clip with observed presentation times of 0.00, 0.08, 0.48, 0.60 and 0.80 seconds. It demonstrates why an accurate final-frame export can still be an unsuitable editing reference. The new script checks actual timestamps, unequal intervals, exported dimensions and pixel colours; it does not infer quality from a successful command exit.
+
+[Inspect the fixture and reproduce the six checks](VFR-ENDINGS.md). This is one synthetic VFR case, not general phone-video or browser-codec coverage.
+
 ## Pick a free tool by the job
 
 This is a small comparison of different workflows, not a ranking. Product-page limits were checked on 30 October 2026 and can change.
@@ -99,7 +105,7 @@ For a thumbnail, save the picture that communicates the subject clearly. For a c
 
 If you choose an earlier reference, make the source clip end at the same chosen picture in your editor. Otherwise the audience sees later pictures before the next clip begins from an older one. A sharpness score cannot establish semantic correctness: check faces, hands, labels, edges and motion direction yourself.
 
-PNG export cannot recreate detail lost in video compression. The fixture tests do not cover HDR, tone mapping, rotation metadata, variable frame rate, multiple tracks or corrupt media. For color-critical footage, use a color-managed workflow and inspect the exported image rather than assuming a file extension guarantees fidelity.
+PNG export cannot recreate detail lost in video compression. The original fixture tests do not cover HDR, tone mapping, rotation metadata, multiple tracks or corrupt media. The separate VFR endings extension covers one synthetic case with unequal frame spacing; arbitrary variable-frame-rate files remain outside the test scope. For color-critical footage, use a color-managed workflow and inspect the exported image rather than assuming a file extension guarantees fidelity.
 
 ## Scope and attribution
 

@@ -1,0 +1,182 @@
+{
+  "ffmpeg_version": "ffmpeg version 7.1-essentials_build-www.gyan.dev Copyright (c) 2000-2024 the FFmpeg developers",
+  "presentation_times_seconds": [
+    0.0,
+    0.08,
+    0.48,
+    0.6,
+    0.8
+  ],
+  "intervals_seconds": [
+    0.08,
+    0.4,
+    0.12,
+    0.2
+  ],
+  "selected_frame_index": 2,
+  "selected_time_seconds": 0.48,
+  "last_center_rgb": [
+    0,
+    0,
+    0
+  ],
+  "selected_center_rgb": [
+    19,
+    20,
+    238
+  ],
+  "image_dimensions": [
+    320,
+    180
+  ],
+  "checks": {
+    "five_decoded_frames": true,
+    "expected_presentation_timestamps": true,
+    "unequal_frame_intervals": true,
+    "last_png_is_black": true,
+    "selected_png_is_blue": true,
+    "exported_dimensions": true
+  },
+  "commands": [
+    {
+      "label": "encode",
+      "arguments": [
+        "-f",
+        "concat",
+        "-safe",
+        "1",
+        "-i",
+        "frames.ffconcat",
+        "-fps_mode",
+        "vfr",
+        "-c:v",
+        "libx264",
+        "-pix_fmt",
+        "yuv420p",
+        "-crf",
+        "18",
+        "vfr-black-ending.mp4"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "timestamps",
+      "arguments": [
+        "-i",
+        "vfr-black-ending.mp4",
+        "-map",
+        "0:v:0",
+        "-an",
+        "-vf",
+        "showinfo",
+        "-f",
+        "null",
+        "-"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "last",
+      "arguments": [
+        "-i",
+        "vfr-black-ending.mp4",
+        "-map",
+        "0:v:0",
+        "-an",
+        "-fps_mode",
+        "passthrough",
+        "-update",
+        "1",
+        "last.png"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "selected",
+      "arguments": [
+        "-i",
+        "vfr-black-ending.mp4",
+        "-map",
+        "0:v:0",
+        "-an",
+        "-vf",
+        "select=eq(n\\,2)",
+        "-frames:v",
+        "1",
+        "-fps_mode",
+        "passthrough",
+        "-update",
+        "1",
+        "selected.png"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "contact-sheet",
+      "arguments": [
+        "-i",
+        "vfr-black-ending.mp4",
+        "-map",
+        "0:v:0",
+        "-an",
+        "-vf",
+        "tile=5x1:padding=4:margin=4:color=white",
+        "-frames:v",
+        "1",
+        "-update",
+        "1",
+        "contact-sheet.png"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "last.png-pixels",
+      "arguments": [
+        "-i",
+        "last.png",
+        "-frames:v",
+        "1",
+        "-f",
+        "rawvideo",
+        "-pix_fmt",
+        "rgb24",
+        "-"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "selected.png-pixels",
+      "arguments": [
+        "-i",
+        "selected.png",
+        "-frames:v",
+        "1",
+        "-f",
+        "rawvideo",
+        "-pix_fmt",
+        "rgb24",
+        "-"
+      ],
+      "returncode": 0
+    }
+  ],
+  "artifacts": {
+    "vfr-black-ending.mp4": {
+      "bytes": 1916,
+      "sha256": "109d3a890378fb9d501f9476cce48b0f05c08ed6484bea26d7c6996399c862cf"
+    },
+    "last.png": {
+      "bytes": 268,
+      "sha256": "c8ed00cb35e55c8f9d12d906ea438a14015c230ebc465bef908955a31e8f544b"
+    },
+    "selected.png": {
+      "bytes": 611,
+      "sha256": "b682bb11dbcad3b092607b39ebf2a819b90c2cd701df90d97e15b7182b2761cd"
+    },
+    "contact-sheet.png": {
+      "bytes": 3375,
+      "sha256": "63732bf7d42aba193701e250c68b2cd71576d979556e6f3ed6d11db4e5ee3c61"
+    }
+  },
+  "passed": true
+}
